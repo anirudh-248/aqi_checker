@@ -6,7 +6,7 @@ from datetime import datetime
 app = Flask(__name__)
 
 def get_aqi(city):
-    base_url = "https://api.weatherbit.io/v2.0/forecast/airquality"
+    base_url = "https://api.weatherbit.io/v2.0/current/airquality"
     api_key = "21e152f862684d209d90a27afd293dfe"  # Replace with your actual Weatherbit API key
     params = {"city": city, "key": api_key}
 
@@ -51,7 +51,7 @@ def get_aqi(city):
         return f"Error: {e}"
 
 def get_aqi_by_coordinates(latitude, longitude):
-    base_url = "https://api.weatherbit.io/v2.0/forecast/airquality"
+    base_url = "https://api.weatherbit.io/v2.0/current/airquality"
     api_key = "21e152f862684d209d90a27afd293dfe"  # Replace with your actual Weatherbit API key
     params = {"lat": latitude, "lon": longitude, "key": api_key}
 
