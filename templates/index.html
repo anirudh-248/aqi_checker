@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AQI Checker</title>
+    <link rel="stylesheet" type="text/css" href="/static/styles.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+</head>
+
+<body>
+    <div class="container">
+        <div class="left-section">
+            <h1>AQI Checker</h1>
+            <div class="forms">
+                <form onsubmit="getAQI(); return false;">
+                    <label for="cityInput">Enter city name:</label>
+                    <input type="text" id="cityInput" placeholder="City name" required>
+                    <button type="submit">Check AQI</button>
+                </form>
+                <form onsubmit="getAQIFromCoordinates(); return false;">
+                    <label for="marker">Place a marker on the map:</label>
+                    <input type="text" id="latitude" placeholder="Latitude" readonly>
+                    <input type="text" id="longitude" placeholder="Longitude" readonly>
+                    <button type="submit">Check AQI</button>
+                </form>
+            </div>
+            <div class="results" id="result"></div>
+        </div>
+        <div class="right-section">
+            <div class="map" id="map"></div>
+        </div>
+    </div>
+
+    <script>
+        async function getAQI() {
+            const cityInput = document.getElementById('cityInput').value.toLowerCase();
+            const resultContainer = document.getElementById('result');
+
+            try {
+                const response = await fetch(`/get_aqi?city=${cityInput}`);
+                const data = await response.json();
+
+                if (data.result.includes("Error")) {
+                    resultContainer.innerHTML = `<p class="error">${data.result}</p>`;
+                } else {
+                    const aqiValue = parseInt(data.result.split(":")[1].trim(), 10);
+                    resultContainer.innerHTML = `<p class="${getAqiCategory(aqiValue)} result-text">${data.result}</p>`;
+                }
+            } catch (error) {
+                console.error('Error fetching data:', error);
+                resultContainer.innerHTML = '<p class="error">An error occurred while fetching data. Please try again.</p>';
+            }
+        }
+
+        function getAqiCategory(aqiValue) {
+            if (aqiValue >= 0 && aqiValue <= 50) {
+                return 'good';
+            } else if (aqiValue > 50 && aqiValue <= 100) {
+                return 'moderate';
+            } else if (aqiValue > 100 && aqiValue <= 150) {
+                return 'unhealthy-sensitive';
+            } else if (aqiValue > 150 && aqiValue <= 200) {
+                return 'unhealthy';
+            } else if (aqiValue > 200 && aqiValue <= 300) {
+                return 'very-unhealthy';
+            } else {
+                return 'hazardous';
+            }
+        }
+
+        // Initialize the Leaflet map
+        const map = L.map('map').setView([0, 0], 2); // Initial center and zoom level
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        // Add a marker when the map is clicked
+        map.on('click', function (e) {
+            const latlng = e.latlng;
+            const marker = L.marker(latlng).addTo(map);
+
+            // Update the input field with the selected coordinates
+            document.getElementById('latitude').value = latlng.lat.toFixed(6);
+            document.getElementById('longitude').value = latlng.lng.toFixed(6);
+        });
+
+        // Function to get AQI based on coordinates
+        async function getAQIFromCoordinates() {
+            const latitude = document.getElementById('latitude').value;
+            const longitude = document.getElementById('longitude').value;
+            const resultContainer = document.getElementById('result');
+
+            try {
+                const response = await fetch(`/get_aqi?lat=${latitude}&lng=${longitude}`);
+                const data = await response.json();
+
+                if (data.result.includes("Error")) {
+                    resultContainer.innerHTML = `<p class="error">${data.result}</p>`;
+                } else {
+                    const aqiValue = parseInt(data.result.split(":")[1].trim(), 10);
+                    const category = getAqiCategory(aqiValue);
+                    resultContainer.innerHTML = `<p class="${category} result-text">${data.result}</p>`;
+                    console.log(`AQI updated: ${aqiValue} (${category})`);
+                }
+            } catch (error) {
+                console.error('Error fetching data:', error);
+                resultContainer.innerHTML = '<p class="error">An error occurred while fetching data. Please try again.</p>';
+            }
+        }
+
+    </script>
+</body>
+
+</html>
