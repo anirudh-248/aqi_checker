@@ -1,18 +1,18 @@
 from flask import Flask, request, render_template, jsonify, send_from_directory
 import requests
 from urllib.parse import unquote
-from datetime import datetime
+import os
 
 app = Flask(__name__)
 
 def get_aqi(city):
     base_url = "https://api.weatherbit.io/v2.0/current/airquality"
-    api_key = "21e152f862684d209d90a27afd293dfe"  # Replace with your actual Weatherbit API key
+    api_key = os.environ.get("API_KEY")
     params = {"city": city, "key": api_key}
 
     try:
         response = requests.get(base_url, params=params)
-        response.raise_for_status()  # Raise an exception for bad responses (4xx or 5xx)
+        response.raise_for_status()
         data = response.json()
 
         if "data" in data and data["data"]:
@@ -52,12 +52,12 @@ def get_aqi(city):
 
 def get_aqi_by_coordinates(latitude, longitude):
     base_url = "https://api.weatherbit.io/v2.0/current/airquality"
-    api_key = "21e152f862684d209d90a27afd293dfe"  # Replace with your actual Weatherbit API key
+    api_key = os.environ.get("API_KEY")
     params = {"lat": latitude, "lon": longitude, "key": api_key}
 
     try:
         response = requests.get(base_url, params=params)
-        response.raise_for_status()  # Raise an exception for bad responses (4xx or 5xx)
+        response.raise_for_status()
         data = response.json()
 
         if "data" in data and data["data"]:
@@ -95,8 +95,6 @@ def get_aqi_by_coordinates(latitude, longitude):
 
     except requests.exceptions.RequestException as e:
         return f"Error: {e}"
-
-# Rest of your code remains unchanged
 
 @app.route('/static/<path:filename>')
 def serve_static(filename):
